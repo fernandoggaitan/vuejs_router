@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title> Vue.js </title>
+	
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+</head>
+<body>
+
+	<div id="app" class="container">
+		<h1> Router </h1>
+		<ul class="nav nav-pills">
+			<li role="presentation">
+				<router-link to="/principal">Principal</router-link>
+			</li>
+			<li role="presentation">
+				<router-link to="/posts">Ver publicaciones</router-link>
+			</li>
+		</ul>
+		<router-view></router-view>
+	</div>
+
+	<script src="https://unpkg.com/vue/dist/vue.js"></script>
+	<script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+	<script>
+
+		const Principal = {
+			template: `
+				<div>
+					<h2> Esta es mi página principal </h2>
+					<p> Simple ejemplo de <a href="https://vuejs.org/v2/guide/routing.html" target="_blank">Vue router</a>. </p>
+				</div>
+			`
+		};
+
+		const Posts = {
+			data: function(){
+				return {
+					cargando: true,
+					error: false,
+					posts: []
+				}
+			},
+			created: function(){
+				this.recuperarPosts();
+			},
+			methods: {
+				recuperarPosts: function(){
+					var that = this;
+					axios.get('https://jsonplaceholder.typicode.com/posts/')
+					.then(function (response) {
+						that.cargando = false;
+						that.posts = response.data;
+					})
+					.catch(function (error) {
+						that.cargando = false;
+						that.error = true;
+					});
+				}
+			},
+			template: `
+				<div>
+					<div v-if="cargando">
+						Cargando publicaciones...
+					</div>
+					<div v-else-if="error" class="alert alert-danger">
+						Error al intentar cargar las publicaciones.
+					</div>
+					<div v-else>
+						<h2> Publicaciones </h2>
+						<table class="table table-striped">
+							<thead>
+								<tr>
+									<th> Id de usuario </th>
+									<th> Id </th>
+									<th> Título </th>
+									<th>  </th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr v-for="item in posts">
+									<td> {{ item.userId }} </td>
+									<td> {{ item.id }} </td>
+									<td> {{ item.title }} </td>
+									<td>
+										<router-link :to="'/posts/' + item.id" > Ver publicación </router-link> 
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			`
+		};
+
+		const Post = {
+			data: function(){
+				return {
+					cargando: true,
+					error: false,
+					post: null
+				}
+			},
+			created: function(){
+				this.recuperarPost();
+			},
+			methods: {
+				recuperarPost: function(){
+					var that = this;
+					var ide = this.$route.params.id;
+					axios.get('https://jsonplaceholder.typicode.com/posts/' + ide)
+					.then(function (response) {
+						that.cargando = false;
+						that.post = response.data;
+					})
+					.catch(function (error) {
+						that.cargando = false;
+						that.error = true;
+					});
+				}
+			},
+			template: `
+				<div>
+					<div v-if="cargando">
+						Cargando publicación...
+					</div>
+					<div v-else-if="error" class="alert alert-danger">
+						Error al intentar cargar la publicación.
+					</div>
+					<div v-else>
+						<h2> {{ post.title }} </h2>
+						<hr />
+						<div class="row">
+							<div class="col-md-12">
+								{{ post.body }}
+							</div>
+						</div>
+					</div>
+				</div>
+			`
+		};
+
+		const routes = [
+			{path: '/', component: Principal},
+		  	{path: '/principal', component: Principal},
+		  	{path: '/posts', component: Posts},
+		  	{path: '/posts/:id', component: Post}
+		];
+
+		const router = new VueRouter({
+			routes: routes
+		});
+
+		const app = new Vue({
+			router: router
+		}).$mount('#app');
+
+	</script>
+
+</body>
+</html>
